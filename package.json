@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "netlify dev",
-    "build": "echo \"No build step\"",
+    "build": "mkdir -p public && echo \"<html><body></body></html>\" > public/index.html",
     "start": "netlify dev"
   },
   "dependencies": {
@@ -11,5 +11,8 @@
   },
   "devDependencies": {
     "netlify-cli": "^15.0.0"
+  },
+  "engines": {
+    "node": "18.x"
   }
 }
