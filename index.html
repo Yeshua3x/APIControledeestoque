@@ -1,0 +1,158 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Controle de Estoque - Admin</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:20px}
+    input,button{margin:4px;padding:6px}
+    .row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+    textarea{width:100%;height:200px;margin-top:8px}
+    label{font-weight:600}
+    section{border:1px solid #ddd;padding:12px;margin-bottom:12px;border-radius:6px}
+  </style>
+</head>
+<body>
+  <h1>Controle de Estoque — Painel</h1>
+  <p>Defina a <strong>API Key</strong (Header: <code>Authorization: Bearer &lt;API_KEY&gt;</code>)> abaixo para usar a API.</p>
+
+  <div class="row">
+    <label>API Key:</label>
+    <input id="apiKey" type="text" style="flex:1" placeholder="Cole sua chave secreta">
+    <button id="clearKey">Limpar</button>
+  </div>
+
+  <section>
+    <h2>Criar item</h2>
+    <form id="createForm">
+      <div class="row">
+        <input name="sku" placeholder="SKU" required>
+        <input name="name" placeholder="Nome" required>
+      </div>
+      <div class="row">
+        <input name="quantity" placeholder="Quantidade" type="number">
+        <input name="price" placeholder="Preço" type="number" step="0.01">
+        <input name="location" placeholder="Local">
+      </div>
+      <button type="submit">Criar</button>
+    </form>
+  </section>
+
+  <section>
+    <h2>Listar itens</h2>
+    <div class="row">
+      <button id="listBtn">Listar todos</button>
+      <input id="filterSku" placeholder="Filtrar por SKU">
+      <button id="listFilterBtn">Listar com filtro</button>
+    </div>
+  </section>
+
+  <section>
+    <h2>Operações por ID</h2>
+    <div class="row">
+      <input id="itemId" placeholder="ID do item">
+      <button id="getBtn">Buscar</button>
+      <button id="deleteBtn">Excluir</button>
+    </div>
+
+    <h3>Atualizar</h3>
+    <form id="updateForm">
+      <div class="row">
+        <input name="u_quantity" placeholder="Quantidade" type="number">
+        <input name="u_price" placeholder="Preço" type="number" step="0.01">
+        <input name="u_location" placeholder="Local">
+      </div>
+      <button type="submit">Atualizar (usa ID acima)</button>
+    </form>
+  </section>
+
+  <h2>Resposta / Logs</h2>
+  <textarea id="output" readonly></textarea>
+
+<script>
+const base = '/.netlify/functions';
+
+function getKeyHeader() {
+  const key = document.getElementById('apiKey').value.trim();
+  return key ? { 'Authorization': 'Bearer ' + key } : {};
+}
+
+async function apiFetch(path, opts={}) {
+  const headers = Object.assign({}, opts.headers || {}, getKeyHeader());
+  const res = await fetch(base + path, Object.assign({}, opts, { headers }));
+  const text = await res.text();
+  return { status: res.status, text };
+}
+
+function log(...args) {
+  const out = document.getElementById('output');
+  out.value = (new Date()).toISOString() + ' — ' + args.join(' ') + '\n' + out.value;
+}
+
+document.getElementById('clearKey').addEventListener('click', () => {
+  document.getElementById('apiKey').value = '';
+});
+
+document.getElementById('createForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const f = new FormData(e.target);
+  const body = {
+    sku: f.get('sku'),
+    name: f.get('name'),
+    quantity: Number(f.get('quantity')||0),
+    price: Number(f.get('price')||0),
+    location: f.get('location')||''
+  };
+  const res = await apiFetch('/createItem', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  log('CREATE', res.status, res.text);
+});
+
+document.getElementById('listBtn').addEventListener('click', async () => {
+  const res = await apiFetch('/listItems');
+  log('LIST', res.status, res.text);
+});
+
+document.getElementById('listFilterBtn').addEventListener('click', async () => {
+  const sku = document.getElementById('filterSku').value.trim();
+  const res = await apiFetch('/listItems' + (sku ? `?sku=${encodeURIComponent(sku)}` : ''));
+  log('LIST-FILTER', res.status, res.text);
+});
+
+document.getElementById('getBtn').addEventListener('click', async () => {
+  const id = document.getElementById('itemId').value.trim();
+  if (!id) return log('GET', 'Missing id');
+  const res = await apiFetch('/getItem?id=' + encodeURIComponent(id));
+  log('GET', res.status, res.text);
+});
+
+document.getElementById('deleteBtn').addEventListener('click', async () => {
+  const id = document.getElementById('itemId').value.trim();
+  if (!id) return log('DELETE', 'Missing id');
+  const res = await apiFetch('/deleteItem?id=' + encodeURIComponent(id), { method: 'DELETE' });
+  log('DELETE', res.status, res.text || 'No content');
+});
+
+document.getElementById('updateForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const id = document.getElementById('itemId').value.trim();
+  if (!id) return log('UPDATE', 'Missing id');
+  const f = new FormData(e.target);
+  const body = {};
+  if (f.get('u_quantity')) body.quantity = Number(f.get('u_quantity'));
+  if (f.get('u_price')) body.price = Number(f.get('u_price'));
+  if (f.get('u_location')) body.location = f.get('u_location');
+  const res = await apiFetch('/updateItem?id=' + encodeURIComponent(id), {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  log('UPDATE', res.status, res.text);
+});
+</script>
+</body>
+</html>
