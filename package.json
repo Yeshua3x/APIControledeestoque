@@ -1,0 +1,15 @@
+{
+  "name": "stock-api-netlify",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "netlify dev",
+    "build": "echo \"No build step\"",
+    "start": "netlify dev"
+  },
+  "dependencies": {
+    "better-sqlite3": "^8.0.1"
+  },
+  "devDependencies": {
+    "netlify-cli": "^15.0.0"
+  }
+}
