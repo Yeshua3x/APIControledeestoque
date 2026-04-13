@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "netlify dev",
-    "build": "mkdir -p public && echo \"<html><body></body></html>\" > public/index.html",
+    "build": "mkdir -p dist && echo \"<html><body></body></html>\" > dist/index.html",
     "start": "netlify dev"
   },
   "dependencies": {
