@@ -6,9 +6,6 @@
     "build": "mkdir -p dist && echo \"<html><body></body></html>\" > dist/index.html",
     "start": "netlify dev"
   },
-  "dependencies": {
-    "better-sqlite3": "^8.0.1"
-  },
   "devDependencies": {
     "netlify-cli": "^15.0.0"
   },
